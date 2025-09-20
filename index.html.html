@@ -1,0 +1,1794 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Desafio do Administrador - RPG</title>
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --bg-color: #0a0a23;
+            --text-color: #fff;
+            --main-font: 'Press Start 2P', monospace;
+            --question-font: 'VT323', monospace;
+            --red-pixel: #ff5a5a;
+            --green-pixel: #00de7a;
+            --yellow-pixel: #ffde59;
+            --blue-pixel: #5a7dff;
+            --ui-bg: rgba(30, 30, 60, 0.8);
+            --border-pixel: 3px solid #fff;
+            --btn-bg: #4a4a8f;
+            --colorful-bg: #1e90ff;
+            --stress-color: #ff4500;
+            --time-pressure: #ff8c00;
+            --neon-blue: #00f3ff;
+            --neon-pink: #ff00ff;
+            --dark-bg: #12122b;
+            --light-text: #f0f0f0;
+        }
+
+        /* Modo escuro (padrão) */
+        body {
+            --background-color: var(--dark-bg);
+            --text-color: var(--light-text);
+            --ui-bg: rgba(30, 30, 60, 0.8);
+        }
+
+        /* Modo claro */
+        body.light-mode {
+            --background-color: #f0f8ff;
+            --text-color: #333;
+            --ui-bg: rgba(240, 248, 255, 0.9);
+        }
+
+        @keyframes pixel-scroll {
+            from { background-position: 0 0; }
+            to { background-position: -64px -64px; }
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            to { transform: scale(1); }
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-5px); }
+            75% { transform: translateX(5px); }
+        }
+
+        @keyframes stress-pulse {
+            0% { background-color: var(--colorful-bg); }
+            50% { background-color: #ffcccc; }
+            to { background-color: var(--colorful-bg); }
+        }
+
+        @keyframes time-warning {
+            0%, 100% { box-shadow: 0 0 0 0 rgba(255, 140, 0, 0.7); }
+           50% { box-shadow: 0 0 15px 8px rgba(255, 140, 0, 0.7); }
+        }
+
+        @keyframes neon {
+            0%, 100% { text-shadow: 0 0 5px #fff, 0 0 10px #fff, 0 0 15px var(--neon-blue), 0 0 20px var(--neon-blue); }
+            50% { text-shadow: 0 0 5px #fff, 0 0 10px #fff, 0 0 15px var(--neon-pink), 0 0 20px var(--neon-pink); }
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0) rotate(0deg); }
+            50% { transform: translateY(-20px) rotate(10deg); }
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes achievement-popup {
+            0% { right: -300px; }
+            20% { right: 20px; }
+            80% { right: 20px; }
+            to { right: -300px; }
+        }
+
+        body {
+            font-family: var(--main-font);
+            background-color: var(--background-color);
+            color: var(--text-color);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            text-align: center;
+            overflow: hidden;
+            font-size: 1rem;
+            background-image: url("data:image/svg+xml,%3Csvg width='64' height='64' viewBox='0 0 64 64' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M32 0v32h32V0H32zM0 32h32v32H0V32z' fill='%23222222' fill-opacity='0.4' fill-rule='evenodd'/%3E%3C/svg%3E");
+            animation: pixel-scroll 10s linear infinite;
+            transition: background-color 0.5s ease;
+        }
+
+        body.light-mode {
+            background-image: url("data:image/svg+xml,%3Csvg width='64' height='64' viewBox='0 0 64 64' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M32 0v32h32V0H32zM0 32h32v32H0V32z' fill='%23e0e0e0' fill-opacity='0.4' fill-rule='evenodd'/%3E%3C/svg%3E");
+        }
+
+        body.colorful-mode {
+            background-color: var(--colorful-bg);
+            background-image: none;
+            color: #333;
+            animation: none;
+        }
+
+        body.stress-mode {
+            animation: stress-pulse 2s infinite;
+        }
+
+        .game-container {
+            width: 90%;
+            max-width: 800px;
+            height: 90%;
+            max-height: 600px;
+            background-color: var(--ui-bg);
+            border: var(--border-pixel);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+            padding: 20px;
+            box-sizing: border-box;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            transition: all 0.5s ease;
+            position: relative;
+            border-radius: 12px;
+            backdrop-filter: blur(10px);
+        }
+
+        .colorful-mode .game-container {
+            background-color: rgba(255, 255, 255, 0.85);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+            border-color: #333;
+        }
+        
+        .screen {
+            display: none;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            width: 100%;
+            height: 100%;
+            animation: fadeIn 0.5s ease;
+        }
+
+        .screen.active {
+            display: flex;
+        }
+
+        h1 {
+            font-size: 1.8rem;
+            margin-bottom: 25px;
+            color: var(--yellow-pixel);
+            text-shadow: 3px 3px 0 #000;
+            animation: neon 2s infinite;
+            letter-spacing: 1px;
+        }
+        
+        .colorful-mode h1 {
+            color: var(--text-color);
+            text-shadow: 2px 2px 0px #333;
+            animation: none;
+        }
+
+        .text-box {
+            background-color: var(--btn-bg);
+            border: var(--border-pixel);
+            padding: 25px;
+            margin: 20px 0;
+            line-height: 1.6;
+            text-align: left;
+            overflow-y: auto;
+            max-height: 60%;
+            width: 95%;
+            border-radius: 8px;
+            position: relative;
+            box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.5);
+        }
+
+        .text-box::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, var(--neon-blue), var(--neon-pink));
+            animation: neon 3s infinite;
+        }
+
+        .colorful-mode .text-box, .colorful-mode .question-box {
+            background-color: rgba(255, 255, 255, 0.9);
+            border-color: #333;
+            color: #333;
+        }
+
+        .text-box::-webkit-scrollbar {
+            width: 10px;
+        }
+        
+        .text-box::-webkit-scrollbar-track {
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 5px;
+        }
+        
+        .text-box::-webkit-scrollbar-thumb {
+            background-color: var(--blue-pixel);
+            border-radius: 5px;
+            border: 2px solid var(--btn-bg);
+        }
+
+        .btn {
+            background-color: var(--btn-bg);
+            color: var(--text-color);
+            border: var(--border-pixel);
+            padding: 12px 25px;
+            cursor: pointer;
+            text-transform: uppercase;
+            font-size: 0.9rem;
+            box-shadow: 0 5px 0 rgba(0, 0, 0, 0.2);
+            transition: all 0.2s ease;
+            margin-top: 20px;
+            border-radius: 6px;
+            position: relative;
+            overflow: hidden;
+            letter-spacing: 1px;
+        }
+
+        .btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+            transition: 0.5s;
+        }
+
+        .btn:hover::before {
+            left: 100%;
+        }
+
+        .btn:hover {
+            transform: translateY(3px);
+            box-shadow: 0 2px 0 rgba(0, 0, 0, 0.2);
+            background-color: #5555aa;
+        }
+
+        .btn:active {
+            transform: translateY(5px);
+            box-shadow: none;
+        }
+
+        .colorful-mode .btn, .colorful-mode .option-btn {
+            background-color: #5cb85c;
+            color: #fff;
+            border-color: #333;
+            box-shadow: 0 5px 0 #444;
+        }
+
+        .colorful-mode .btn:hover, .colorful-mode .option-btn:hover {
+            background-color: #4cae4c;
+            transform: translateY(3px);
+            box-shadow: 0 2px 0 #333;
+        }
+
+        #prosseguir-btn {
+            opacity: 0;
+            transition: opacity 1s ease-in-out;
+        }
+
+        #prosseguir-btn.visible {
+            opacity: 1;
+        }
+
+        /* Game Screen UI */
+        .game-ui {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .status-bars {
+            width: 100%;
+            display: flex;
+            justify-content: space-around;
+            padding: 15px 0;
+            background-color: var(--ui-bg);
+            border-bottom: var(--border-pixel);
+            flex-wrap: wrap;
+            border-radius: 8px;
+            margin-bottom: 10px;
+        }
+
+        .bar-container {
+            flex: 1;
+            margin: 8px;
+            min-width: 120px;
+        }
+
+        .bar-label {
+            font-size: 0.7rem;
+            margin-bottom: 8px;
+            color: var(--text-color);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .bar-value {
+            font-size: 0.6rem;
+            background: rgba(0, 0, 0, 0.3);
+            padding: 2px 6px;
+            border-radius: 10px;
+        }
+
+        .bar {
+            width: 100%;
+            height: 20px;
+            background-color: rgba(0, 0, 0, 0.3);
+            border: var(--border-pixel);
+            position: relative;
+            overflow: hidden;
+            border-radius: 10px;
+        }
+
+        .bar-fill {
+            height: 100%;
+            transition: width 0.5s ease-in-out;
+            border-radius: 8px;
+        }
+        
+        #tempo-fill { 
+            background: linear-gradient(90deg, var(--green-pixel), #00ff95);
+            transition: width 0.5s ease-in-out, background-color 0.5s ease;
+        }
+        #dinheiro-fill { 
+            background: linear-gradient(90deg, var(--yellow-pixel), #ffea75);
+        }
+        #respeito-fill { 
+            background: linear-gradient(90deg, var(--blue-pixel), #7d95ff);
+        }
+        #pressao-fill { 
+            background: linear-gradient(90deg, var(--stress-color), #ff6a33);
+        }
+
+        .time-warning {
+            animation: time-warning 1s infinite;
+        }
+
+        .game-content {
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            width: 95%;
+            padding: 20px;
+        }
+
+        .scenario-header {
+            font-size: 1rem;
+            margin-bottom: 15px;
+            color: var(--red-pixel);
+            text-align: center;
+            line-height: 1.4;
+            font-family: var(--main-font);
+            text-shadow: 1px 1px 0 #000;
+            background: rgba(0, 0, 0, 0.3);
+            padding: 10px;
+            border-radius: 6px;
+            width: 100%;
+        }
+
+        .question-box {
+            background-color: var(--ui-bg);
+            border: var(--border-pixel);
+            padding: 25px;
+            margin-bottom: 20px;
+            width: 100%;
+            border-radius: 8px;
+            position: relative;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+        }
+
+        .question-text {
+            font-size: 1.4rem;
+            line-height: 1.6;
+            margin-bottom: 15px;
+            font-family: var(--question-font);
+            color: var(--text-color);
+        }
+
+        .colorful-mode .question-text {
+            color: #333;
+        }
+
+        .options-container {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            width: 100%;
+            margin-top: 15px;
+        }
+
+        .option-btn {
+            background-color: rgba(0, 0, 0, 0.3);
+            color: var(--text-color);
+            border: var(--border-pixel);
+            padding: 12px;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: all 0.2s;
+            text-align: left;
+            box-shadow: 0 3px 0 rgba(0, 0, 0, 0.2);
+            border-radius: 6px;
+            font-family: var(--question-font);
+        }
+
+        .option-btn:hover {
+            background-color: rgba(255, 255, 255, 0.1);
+            transform: translateY(2px);
+            box-shadow: 0 1px 0 rgba(0, 0, 0, 0.2);
+        }
+
+        .option-btn.correct {
+            background-color: var(--green-pixel);
+            color: #000;
+        }
+
+        .option-btn.incorrect {
+            background-color: var(--red-pixel);
+            color: #000;
+        }
+
+        .riddle-container {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            z-index: 5;
+        }
+        .riddle-icon {
+            font-size: 2.5rem;
+            color: var(--red-pixel);
+            cursor: pointer;
+            text-shadow: 2px 2px 0px #000;
+            transition: transform 0.2s;
+        }
+        .riddle-icon:hover {
+            transform: scale(1.2) rotate(10deg);
+        }
+        .riddle-text {
+            display: none;
+            position: absolute;
+            background-color: var(--ui-bg);
+            border: var(--border-pixel);
+            padding: 15px;
+            width: 250px;
+            top: 40px;
+            right: 0;
+            z-index: 10;
+            font-size: 0.8rem;
+            line-height: 1.4;
+            border-radius: 8px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+        }
+        .riddle-icon:hover + .riddle-text {
+            display: block;
+        }
+
+        .message-box {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: white;
+            border: 3px solid #333;
+            padding: 30px;
+            z-index: 100;
+            display: none;
+            animation: fadeIn 0.5s ease-in-out;
+            width: 85%;
+            max-width: 500px;
+            text-align: center;
+            border-radius: 12px;
+            color: black;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.3);
+        }
+
+        .message-box .btn {
+            background-color: #4a4a4a;
+            color: white;
+            margin-top: 20px;
+        }
+
+        #end-message {
+            font-size: 1.4rem;
+            line-height: 1.6;
+            margin-bottom: 25px;
+        }
+        
+        #creator-credits {
+            font-size: 0.8rem;
+            margin-top: 25px;
+            color: var(--blue-pixel);
+        }
+
+        .admin-credits {
+            font-family: var(--question-font);
+            font-size: 1.2rem;
+            color: var(--neon-blue);
+            margin: 20px 0;
+            text-align: center;
+            text-shadow: 1px 1px 0 #000;
+            animation: neon 3s infinite;
+        }
+
+        .consequence-text {
+            font-size: 1rem;
+            margin-top: 15px;
+            color: #444;
+            font-style: italic;
+        }
+
+        .shake {
+            animation: shake 0.5s;
+        }
+
+        .pulse {
+            animation: pulse 0.5s;
+        }
+
+        .exit-btn {
+            position: absolute;
+            top: 15px;
+            left: 15px;
+            background-color: var(--red-pixel);
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            cursor: pointer;
+            font-size: 0.8rem;
+            border-radius: 5px;
+            z-index: 20;
+            box-shadow: 0 3px 0 rgba(0, 0, 0, 0.2);
+            transition: all 0.2s;
+        }
+
+        .exit-btn:hover {
+            transform: translateY(2px);
+            box-shadow: 0 1px 0 rgba(0, 0, 0, 0.2);
+        }
+
+        .theme-toggle {
+            position: absolute;
+            bottom: 15px;
+            right: 15px;
+            background: var(--ui-bg);
+            border: var(--border-pixel);
+            color: var(--text-color);
+            padding: 8px 15px;
+            cursor: pointer;
+            font-size: 0.8rem;
+            border-radius: 5px;
+            z-index: 20;
+            box-shadow: 0 3px 0 rgba(0, 0, 0, 0.2);
+            transition: all 0.2s;
+            font-family: var(--main-font);
+        }
+
+        .theme-toggle:hover {
+            transform: translateY(2px);
+            box-shadow: 0 1px 0 rgba(0, 0, 0, 0.2);
+        }
+
+        .copyright {
+            position: absolute;
+            bottom: 10px;
+            width: 100%;
+            font-size: 0.7rem;
+            color: #666;
+            text-align: center;
+        }
+
+        .floating-particles {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: -1;
+        }
+
+        .particle {
+            position: absolute;
+            width: 6px;
+            height: 6px;
+            background-color: rgba(255, 255, 255, 0.7);
+            border-radius: 50%;
+            animation: float 8s infinite ease-in-out;
+        }
+
+        .achievement {
+            position: fixed;
+            top: 20px;
+            right: -300px;
+            background: linear-gradient(135deg, #6a11cb 0%, #2575fc 100%);
+            color: white;
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            animation: achievement-popup 5s forwards;
+        }
+
+        .achievement i {
+            font-size: 1.8rem;
+        }
+
+        .achievement-text {
+            font-size: 0.9rem;
+        }
+
+        /* Mobile adjustments */
+        @media (max-width: 768px) {
+            h1 {
+                font-size: 1.3rem;
+            }
+            .btn, .option-btn {
+                font-size: 0.8rem;
+                padding: 10px 15px;
+            }
+            .text-box, .question-text {
+                font-size: 0.9rem;
+            }
+            .bar-label {
+                font-size: 0.6rem;
+            }
+            .scenario-header {
+                font-size: 0.8rem;
+            }
+            .bar-container {
+                min-width: 100px;
+            }
+            .admin-credits {
+                font-size: 0.9rem;
+            }
+            .question-text {
+                font-size: 1.1rem;
+            }
+            .status-bars {
+                flex-direction: column;
+                padding: 10px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .status-bars {
+                flex-direction: column;
+            }
+            .bar-container {
+                margin: 5px 0;
+            }
+            .game-container {
+                padding: 15px;
+            }
+            .text-box {
+                padding: 15px;
+            }
+            .question-box {
+                padding: 15px;
+            }
+            .theme-toggle, .exit-btn {
+                padding: 6px 10px;
+                font-size: 0.7rem;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="game-container">
+        <button class="exit-btn" onclick="sairDoJogo()"><i class="fas fa-times"></i> Sair</button>
+        
+        <div class="floating-particles" id="particles"></div>
+
+        <!-- Tela de Introdução -->
+        <div id="intro-screen" class="screen active">
+            <h1>DESAFIO DO ADMINISTRADOR</h1>
+            <div class="text-box">
+                <p>Você está prestes a assumir o papel de um administrador em uma empresa em crescimento. Suas decisões moldarão o destino da organização e de todos que nela trabalham.</p>
+                <p>Cada escolha tem consequências. O sucesso não é garantido. Você está preparado para enfrentar os desafios da administração?</p>
+            </div>
+            <button id="prosseguir-btn" class="btn" disabled>PROSSEGUIR</button>
+        </div>
+
+        <!-- Tela de Explicação -->
+        <div id="explanation-screen" class="screen">
+            <h1>SIMULADOR DE GESTÃO</h1>
+            <div class="text-box">
+                <p>Como administrador, você enfrentará situações críticas que testarão suas habilidades de:</p>
+                <ul>
+                    <li>Tomada de decisão sob pressão</li>
+                    <li>Gestão de recursos limitados</li>
+                    <li>Liderança de equipes</li>
+                    <li>Resolução de conflitos</li>
+                    <li>Planejamento estratégico</li>
+                </ul>
+                <br>
+                <p><strong>Como funciona:</strong></p>
+                <ul>
+                    <li>Você tem 10 minutos para completar 10 cenários desafiadores</li>
+                    <li>Cada decisão afeta seus recursos: Tempo, Dinheiro, Respeito e Pressão</li>
+                    <li>Decisões erradas aumentam sua pressão e podem levar ao fracasso</li>
+                    <li>Use as charadas (ícone "?") para obter insights valiosos</li>
+                    <li>Se a Pressão atingir o máximo, você será demitido!</li>
+                </ul>
+            </div>
+            <button id="start-game-btn" class="btn">ACEITAR O DESAFIO</button>
+        </div>
+
+        <!-- Tela do Jogo -->
+        <div id="game-screen" class="screen">
+            <div class="status-bars">
+                <div class="bar-container">
+                    <div class="bar-label">
+                        <span>TEMPO</span>
+                        <span class="bar-value" id="tempo-value">10:00</span>
+                    </div>
+                    <div class="bar"><div id="tempo-fill" class="bar-fill" style="width: 100%"></div></div>
+                </div>
+                <div class="bar-container">
+                    <div class="bar-label">
+                        <span>DINHEIRO</span>
+                        <span class="bar-value" id="dinheiro-value">R$ 0</span>
+                    </div>
+                    <div class="bar"><div id="dinheiro-fill" class="bar-fill" style="width: 0%"></div></div>
+                </div>
+                <div class="bar-container">
+                    <div class="bar-label">
+                        <span>RESPEITO</span>
+                        <span class="bar-value" id="respeito-value">0%</span>
+                    </div>
+                    <div class="bar"><div id="respeito-fill" class="bar-fill" style="width: 0%"></div></div>
+                </div>
+                <div class="bar-container">
+                    <div class="bar-label">
+                        <span>PRESSAO</span>
+                        <span class="bar-value" id="pressao-value">0%</span>
+                    </div>
+                    <div class="bar"><div id="pressao-fill" class="bar-fill" style="width: 0%"></div></div>
+                </div>
+            </div>
+
+            <div class="game-content">
+                <div class="riddle-container">
+                    <span class="riddle-icon">?</span>
+                    <div class="riddle-text" id="riddle-text"></div>
+                </div>
+                
+                <div id="scenario-header" class="scenario-header"></div>
+                
+                <div id="phase-label">Cenário 1</div>
+                <div id="question-box" class="question-box">
+                    <div class="question-text" id="question-text"></div>
+                    <div class="options-container" id="options-container"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tela Final -->
+        <div id="end-screen" class="screen">
+            <h1>FIM DO JOGO</h1>
+            <div class="text-box">
+                <p id="end-message"></p>
+                <br>
+                <p id="end-details"></p>
+                <br>
+                <p>Administrar é tomar decisões difíceis com informações limitadas, lidar avec pressão constante e equilibrar múltiplas prioridades.</p>
+                <br>
+                <p style="color: var(--green-pixel);">Você tem o que é preciso para ser um administrador de sucesso?</p>
+                <br>
+                <div class="admin-credits">Desenvolvido em colaboração com os alunos do curso de Administração UNIMB</div>
+            </div>
+            <button id="restart-btn" class="btn">JOGAR NOVAMENTE</button>
+            <div class="copyright">
+                © 2025 - Todos os direitos reservados - Miguel Neto
+            </div>
+            <button class="theme-toggle" id="theme-toggle"><i class="fas fa-moon"></i> Alternar Tema</button>
+        </div>
+
+        <div id="message-modal" class="message-box">
+            <div id="modal-text"></div>
+            <div id="consequence-text" class="consequence-text"></div>
+            <button id="modal-btn" class="btn">CONTINUAR</button>
+        </div>
+
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // Referências de elementos
+            const introScreen = document.getElementById('intro-screen');
+            const explanationScreen = document.getElementById('explanation-screen');
+            const gameScreen = document.getElementById('game-screen');
+            const endScreen = document.getElementById('end-screen');
+            const prosseguirBtn = document.getElementById('prosseguir-btn');
+            const startGameBtn = document.getElementById('start-game-btn');
+            const restartBtn = document.getElementById('restart-btn');
+            const questionText = document.getElementById('question-text');
+            const optionsContainer = document.getElementById('options-container');
+            const tempoFill = document.getElementById('tempo-fill');
+            const dinheiroFill = document.getElementById('dinheiro-fill');
+            const respeitoFill = document.getElementById('respeito-fill');
+            const pressaoFill = document.getElementById('pressao-fill');
+            const tempoValue = document.getElementById('tempo-value');
+            const dinheiroValue = document.getElementById('dinheiro-value');
+            const respeitoValue = document.getElementById('respeito-value');
+            const pressaoValue = document.getElementById('pressao-value');
+            const phaseLabel = document.getElementById('phase-label');
+            const riddleText = document.getElementById('riddle-text');
+            const endMessage = document.getElementById('end-message');
+            const endDetails = document.getElementById('end-details');
+            const messageModal = document.getElementById('message-modal');
+            const modalText = document.getElementById('modal-text');
+            const consequenceText = document.getElementById('consequence-text');
+            const modalBtn = document.getElementById('modal-btn');
+            const scenarioHeader = document.getElementById('scenario-header');
+            const gameContainer = document.querySelector('.game-container');
+            const particlesContainer = document.getElementById('particles');
+            const themeToggle = document.getElementById('theme-toggle');
+
+            // Efeitos sonoros
+            const soundEffects = {
+                correct: new Audio('data:audio/wav;base64,UklGRigAAABXQVZFZm10IBAAAAABAAEARKwAAIhYAQACABAAZGF0YQQAAAAAAA'),
+                incorrect: new Audio('data:audio/wav;base64,UklGRh4AAABXQVZFZm10IBAAAAABAAEARKwAAIhYAQACABAAZGF0YQwAAAAAAA'),
+                click: new Audio('data:audio/wav;base64,UklGRhAAAABXQVZFZm10IBAAAAABAAEARKwAAIhYAQACABAAZGF0YQAAAAAAA'),
+                win: new Audio('data:audio/wav;base64,UklGRhQAAABXQVZFZm10IBAAAAABAAEARKwAAIhYAQACABAAZGF0YQAAAAAAA'),
+                lose: new Audio('data:audio/wav;base64,UklGRhAAAABXQVZFZm10IBAAAAABAAEARKwAAIhYAQACABAAZGF0YQAAAAAAA')
+            };
+
+            // Configuração básica dos efeitos sonoros (simulados)
+            for (let key in soundEffects) {
+                soundEffects[key].volume = 0.3;
+            }
+
+            // Alternar tema claro/escuro
+            themeToggle.addEventListener('click', () => {
+                document.body.classList.toggle('light-mode');
+                if (document.body.classList.contains('light-mode')) {
+                    themeToggle.innerHTML = '<i class="fas fa-sun"></i> Alternar Tema';
+                } else {
+                    themeToggle.innerHTML = '<i class="fas fa-moon"></i> Alternar Tema';
+                }
+                try {
+                    soundEffects.click.play();
+                } catch (e) {
+                    console.log("Efeito sonoro não pode ser reproduzido");
+                }
+            });
+
+            // Criar partículas flutuantes
+            function createParticles() {
+                for (let i = 0; i < 30; i++) {
+                    const particle = document.createElement('div');
+                    particle.classList.add('particle');
+                    particle.style.left = `${Math.random() * 100}%`;
+                    particle.style.top = `${Math.random() * 100}%`;
+                    particle.style.animationDuration = `${Math.random() * 10 + 5}s`;
+                    particle.style.opacity = Math.random();
+                    particle.style.animationDelay = `${Math.random() * 5}s`;
+                    particlesContainer.appendChild(particle);
+                }
+            }
+
+            // Mostrar conquista
+            function showAchievement(title, icon) {
+                const achievement = document.createElement('div');
+                achievement.className = 'achievement';
+                achievement.innerHTML = `
+                    <i class="fas ${icon}"></i>
+                    <div class="achievement-text">${title}</div>
+                `;
+                document.body.appendChild(achievement);
+                
+                // Remover após a animação
+                setTimeout(() => {
+                    document.body.removeChild(achievement);
+                }, 5000);
+            }
+
+            // Variáveis de estado do jogo
+            let gameState = {};
+            let gameTimer;
+            let questionPool = [];
+            const TOTAL_TIME = 600; // 10 minutos em segundos
+            const TOTAL_PHASES = 10;
+            
+            // Cenários e perguntas sobre Administração com mais pressão (10 fases)
+            const allScenarios = [
+                {
+                    title: "CRISE FINANCEIRA",
+                    description: "A empresa está com fluxo de caixa negativo. Você precisa tomar decisões difíceis para evitar a falência.",
+                    questions: [
+                        { 
+                            q: "Você descobre que a empresa tem apenas 3 meses de capital de giro. O que faz primeiro?", 
+                            options: [
+                                "A) Demitir 30% dos funcionários para reduzir custos imediatamente", 
+                                "B) Procurar um empréstimo emergencial para capital de giro", 
+                                "C) Cortar todos os gastos não essenciais e renegociar com fornecedores", 
+                                "D) Aumentar preços para gerar mais receita rapidamente"
+                            ], 
+                            a: "C", 
+                            riddle: "Sou a saída mais racional em tempos de vacas magras. Exijo criatividade e diálogo, não medidas drásticas.",
+                            consequences: {
+                                correct: { money: 15, respect: 10, pressure: -5 },
+                                incorrect: { money: -20, respect: -15, pressure: 15 }
+                            }
+                        },
+                        { 
+                            q: "Um cliente importante está atrasando um pagamento significativo. Como procede?", 
+                            options: [
+                                "A) Para todas as entregas para esse cliente até regularizarem o pagamento", 
+                                "B) Liga para o gestor do cliente com tom ameaçador exigindo pagamento", 
+                                "C) Oferece um desconto para quitação imediata e negocia um plano de pagamento", 
+                                "D) Contrata um agressor de cobranças para resolver a situação"
+                            ], 
+                            a: "C",
+                            consequences: {
+                                correct: { money: 10, respect: 5, pressure: -3 },
+                                incorrect: { money: -10, respect: -10, pressure: 10 }
+                            }
+                        },
+                        { 
+                            q: "Os acionistas exigem cortes de custos. Qual área você preserva por último?", 
+                            options: [
+                                "A) Pesquisa e Desenvolvimento (P&D)", 
+                                "B) Marketing e Publicidade", 
+                                "C) Recursos Humanos e Treinamento", 
+                                "D) Qualidade e Atendimento ao Cliente"
+                            ], 
+                            a: "A",
+                            consequences: {
+                                correct: { money: 5, respect: 15, pressure: -5 },
+                                incorrect: { money: 10, respect: -20, pressure: 15 }
+                            }
+                        }
+                    ]
+                },
+                {
+                    title: "CONFLITO DE EQUIPE",
+                    description: "Seu departamento está dividido por brigas internas que afetam a produtividade.",
+                    questions: [
+                        { 
+                            q: "Dois gerentes importantes estão em conflito aberto, afetando seus times. Como resolve?", 
+                            options: [
+                                "A) Demite ambos para dar exemplo de que conflitos não serão tolerados", 
+                                "B) Promove uma reunião de mediação para entender as causas do conflito", 
+                                "C) Ignora a situação, esperando que resolvam entre si", 
+                                "D) Reestrutura a equipe separando os envolvidos sem discutir o problema"
+                            ], 
+                            a: "B", 
+                            riddle: "Sou a arte de transformar discórdia em cooperação. Exijo escuta ativa e imparcialidade.",
+                            consequences: {
+                                correct: { money: 0, respect: 20, pressure: -10 },
+                                incorrect: { money: -10, respect: -20, pressure: 20 }
+                            }
+                        },
+                        { 
+                            q: "Um funcionário talentoso mas problemático está causando atritos. O que faz?", 
+                            options: [
+                                "A) Suporta o comportamento porque o funcionário é produtivo", 
+                                "B) Aplica medidas disciplinares imediatas conforme o regimento", 
+                                "C) Oferece coaching e feedback específico sobre o comportamento", 
+                                "D) Transfere o problema para outro departamento"
+                            ], 
+                            a: "C",
+                            consequences: {
+                                correct: { money: -5, respect: 15, pressure: -5 },
+                                incorrect: { money: 5, respect: -15, pressure: 10 }
+                            }
+                        },
+                        { 
+                            q: "Rumores negativos estão se espalhando pela empresa. Como age?", 
+                            options: [
+                                "A) Emite um comunicado ameaçando demitir quem espalhar boatos", 
+                                "B) Ignora, pois rumores sempre existem em empresas", 
+                                "C) Promove uma reunião transparente para esclarecer fatos", 
+                                "D) Contrata uma consultoria para investigar a fonte dos rumores"
+                            ], 
+                            a: "C",
+                            consequences: {
+                                correct: { money: 0, respect: 15, pressure: -8 },
+                                incorrect: { money: -10, respect: -15, pressure: 15 }
+                            }
+                        }
+                    ]
+                },
+                {
+                    title: "EXPANSÃO DE MERCADO",
+                    description: "Sua empresa está considerando expandir para um novo mercado internacional.",
+                    questions: [
+                        { 
+                            q: "Qual é o primeiro passo ao considerar expansão internacional?", 
+                            options: [
+                                "A) Contratar funcionários locais imediatamente", 
+                                "B) Realizar uma análise detalhada do mercado-alvo", 
+                                "C) Investir pesado em marketing internacional", 
+                                "D) Traduzir seu site para o idioma local"
+                            ], 
+                            a: "B", 
+                            riddle: "Antes de pular, sempre verifique a profundidade da água. No business, chamo-me due diligence.",
+                            consequences: {
+                                correct: { money: 10, respect: 10, pressure: -5 },
+                                incorrect: { money: -15, respect: -10, pressure: 10 }
+                            }
+                        },
+                        { 
+                            q: "Como lidar com diferenças culturais na expansão?", 
+                            options: [
+                                "A) Impor a cultura corporativa da matriz", 
+                                "B) Adaptar produtos e estratégias à cultura local", 
+                                "C) Ignorar diferenças culturais para manter consistência", 
+                                "D) Terceirizar todas as operações locais"
+                            ], 
+                            a: "B",
+                            consequences: {
+                                correct: { money: 5, respect: 15, pressure: -3 },
+                                incorrect: { money: -10, respect: -15, pressure: 12 }
+                            }
+                        },
+                        { 
+                            q: "Qual estratégia é mais eficaz para entrada no mercado?", 
+                            options: [
+                                "A) Aquisição de empresa local estabelecida", 
+                                "B) Estabelecimento de joint venture", 
+                                "C) Exportação indireta através de intermediários", 
+                                "D) Depende das características específicas do mercado"
+                            ], 
+                            a: "D",
+                            consequences: {
+                                correct: { money: 10, respect: 15, pressure: -5 },
+                                incorrect: { money: -20, respect: -10, pressure: 15 }
+                            }
+                        }
+                    ]
+                },
+                {
+                    title: "INOVAÇÃO TECNOLÓGICA",
+                    description: "Sua empresa precisa se modernizar tecnologicamente para manter a competitividade.",
+                    questions: [
+                        { 
+                            q: "Como priorizar investimentos em tecnologia?", 
+                            options: [
+                                "A) Adotar todas as novidades tecnológicas do mercado", 
+                                "B) Focar em tecnologias que resolvam problemas específicos do negócio", 
+                                "C) Esperar até que os concorrentes testem as novas tecnologias", 
+                                "D) Terceirizar todas as decisões tecnológicas"
+                            ], 
+                            a: "B", 
+                            riddle: "Não sou um fim, mas um meio. Resolvo problemas, não os crio. A chave está no alinhamento estratégico.",
+                            consequences: {
+                                correct: { money: 15, respect: 10, pressure: -5 },
+                                incorrect: { money: -25, respect: -15, pressure: 15 }
+                            }
+                        },
+                        { 
+                            q: "Como gerenciar a resistência à mudança tecnológica?", 
+                            options: [
+                                "A) Ignorar a resistência e implementar à força", 
+                                "B) Demitir os funcionários resistentes", 
+                                "C) Envolver os funcionários no processo e oferecer treinamento adequado", 
+                                "D) Adiar a implementação indefinidamente"
+                            ], 
+                            a: "C",
+                            consequences: {
+                                correct: { money: -10, respect: 20, pressure: -8 },
+                                incorrect: { money: 5, respect: -20, pressure: 18 }
+                            }
+                        },
+                        { 
+                            q: "Qual o erro mais comum em projetos de transformação digital?", 
+                            options: [
+                                "A) Focar apenas na tecnologia e não nas pessoas", 
+                                "B) Alocar orçamento insuficiente", 
+                                "C) Contratar consultores externos", 
+                                "D) Implementar mudanças muito rapidamente"
+                            ], 
+                            a: "A",
+                            consequences: {
+                                correct: { money: 5, respect: 15, pressure: -5 },
+                                incorrect: { money: -15, respect: -10, pressure: 12 }
+                            }
+                        }
+                    ]
+                },
+                {
+                    title: "GESTÃO DE CRISE",
+                    description: "Um problema inesperado ameaça a reputação e operação da empresa.",
+                    questions: [
+                        { 
+                            q: "Qual a primeira ação em uma crise de reputação?", 
+                            options: [
+                                "A) Negar veementemente todas as acusações", 
+                                "B) Esconder informações para evitar pânico", 
+                                "C) Assumir a responsabilidade e comunicar-se transparentemente", 
+                                "D) Culpar terceiros pela situação"
+                            ], 
+                            a: "C", 
+                            riddle: "Em tempos de tempestade, a transparência é o melhor abrigo. Quanto mais você tenta esconder, mais exposto fica.",
+                            consequences: {
+                                correct: { money: -5, respect: 20, pressure: 10 },
+                                incorrect: { money: -30, respect: -30, pressure: 25 }
+                            }
+                        },
+                        { 
+                            q: "Como lidar com a mídia durante uma crise?", 
+                            options: [
+                                "A) Evitar qualquer contato com a imprensa", 
+                                "B) Fornecer informações precisas e regulares através de um porta-voz", 
+                                "C) Processar veículos que publicarem informações negativas", 
+                                "D) Contratar uma empresa para remover conteúdo negativo"
+                            ], 
+                            a: "B",
+                            consequences: {
+                                correct: { money: 0, respect: 15, pressure: -5 },
+                                incorrect: { money: -20, respect: -20, pressure: 20 }
+                            }
+                        },
+                        { 
+                            q: "Qual é o aspecto mais importante na recuperação pós-crise?", 
+                            options: [
+                                "A) Restabelecer a confiança dos stakeholders", 
+                                "B) Aumentar agressivamente o marketing", 
+                                "C) Reduzir custos para compensar prejuízos", 
+                                "D) Redesenhar completamente a identidade visual da empresa"
+                            ], 
+                            a: "A",
+                            consequences: {
+                                correct: { money: 5, respect: 20, pressure: -10 },
+                                incorrect: { money: -15, respect: -15, pressure: 15 }
+                            }
+                        }
+                    ]
+                },
+                {
+                    title: "SUSTENTABILIDADE EMPRESARIAL",
+                    description: "A empresa precisa adotar práticas mais sustentáveis para atender às exigências do mercado.",
+                    questions: [
+                        { 
+                            q: "Por onde começar uma estratégia de sustentabilidade?", 
+                            options: [
+                                "A) Implementando medidas cosméticas para melhorar a imagem", 
+                                "B) Realizando um diagnóstico completo do impacto ambiental da empresa", 
+                                "C) Copiando as práticas de sustentabilidade dos concorrentes", 
+                                "D) Terceirizando a responsabilidade para consultorias especializadas"
+                            ], 
+                            a: "B", 
+                            riddle: "Não sou moda passageira, mas necessidade permanente. Comece medindo para depois gerenciar.",
+                            consequences: {
+                                correct: { money: -10, respect: 15, pressure: -5 },
+                                incorrect: { money: 5, respect: -15, pressure: 10 }
+                            }
+                        },
+                        { 
+                            q: "Como balancear sustentabilidade e rentabilidade?", 
+                            options: [
+                                "A) Focar apenas na rentabilidade e ignorar a sustentabilidade", 
+                                "B) Implementar apenas práticas que gerem economia financeira", 
+                                "C) Desenvolver um modelo que crie valor tanto econômico quanto socioambiental", 
+                                "D) Terceirizar a sustentabilidade para não afetar a rentabilidade"
+                            ], 
+                            a: "C",
+                            consequences: {
+                                correct: { money: 10, respect: 20, pressure: -5 },
+                                incorrect: { money: -15, respect: -15, pressure: 12 }
+                            }
+                        },
+                        { 
+                            q: "Qual o benefício de longo prazo da sustentabilidade empresarial?", 
+                            options: [
+                                "A) Melhora da imagem perante o público", 
+                                "B) Redução de custos operacionais", 
+                                "C) Aumento da resiliência e competitividade do negócio", 
+                                "D) Cumprimento de exigências legais"
+                            ], 
+                            a: "C",
+                            consequences: {
+                                correct: { money: 15, respect: 15, pressure: -8 },
+                                incorrect: { money: -10, respect: -10, pressure: 10 }
+                            }
+                        }
+                    ]
+                },
+                {
+                    title: "LIDERANÇA E MOTIVAÇÃO",
+                    description: "Sua equipe está desmotivada e com produtividade em declínio.",
+                    questions: [
+                        { 
+                            q: "Como diagnosticar as causas da desmotivação?", 
+                            options: [
+                                "A) Assumir que você sabe o que motiva sua equipe", 
+                                "B) Realizar pesquisas anônimas e conversas individuais", 
+                                "C) Aumentar a pressão por resultados", 
+                                "D) Ignorar o problema e focar apenas em metas"
+                            ], 
+                            a: "B", 
+                            riddle: "Antes de prescrever, é preciso diagnosticar. Às vezes, a solução está em ouvir mais e falar menos.",
+                            consequences: {
+                                correct: { money: 0, respect: 15, pressure: -5 },
+                                incorrect: { money: -10, respect: -15, pressure: 12 }
+                            }
+                        },
+                        { 
+                            q: "Qual abordagem é mais eficaz para motivar equipes?", 
+                            options: [
+                                "A) Recompensas financeiras individuais", 
+                                "B) Reconhecimento público e oportunidades de crescimento", 
+                                "C) Ameaças de demissão para os menos produtivos", 
+                                "D) Promoções baseadas apenas em tempo de casa"
+                            ], 
+                            a: "B",
+                            consequences: {
+                                correct: { money: 5, respect: 20, pressure: -8 },
+                                incorrect: { money: -15, respect: -20, pressure: 15 }
+                            }
+                        },
+                        { 
+                            q: "Como lidar com um funcionário talentoso mas desmotivado?", 
+                            options: [
+                                "A) Demiti-lo para não contaminar os outros", 
+                                "B) Designar-lhe desafios alinhados com seus interesses e habilidades", 
+                                "C) Ignorar o problema esperando que se resolva sozinho", 
+                                "D) Transferi-lo para outro departamento"
+                            ], 
+                            a: "B",
+                            consequences: {
+                                correct: { money: 10, respect: 15, pressure: -5 },
+                                incorrect: { money: -20, respect: -15, pressure: 12 }
+                            }
+                        }
+                    ]
+                },
+                {
+                    title: "GESTÃO DE PROJETOS",
+                    description: "Um projeto crucial está atrasado e acima do orçamento.",
+                    questions: [
+                        { 
+                            q: "Qual a primeira ação ao identificar que um projeto está atrasado?", 
+                            options: [
+                                "A) Ocultar o atraso dos stakeholders", 
+                                "B) Realizar uma análise das causas do atraso", 
+                                "C) Culpar a equipe pelo desempenho insatisfatório", 
+                                "D) Adicionar mais pessoas ao projeto para acelerar"
+                            ], 
+                            a: "B", 
+                            riddle: "Quando você se perde, a pior estratégia é acelerar. Melhor parar, consultar o mapa e replanejar a rota.",
+                            consequences: {
+                                correct: { money: 0, respect: 10, pressure: -5 },
+                                incorrect: { money: -25, respect: -15, pressure: 15 }
+                            }
+                        },
+                        { 
+                            q: "Como recuperar um projeto fora do orçamento?", 
+                            options: [
+                                "A) Cortar custos indiscriminadamente", 
+                                "B) Repriorizar escopo sem comprometer o valor entregue", 
+                                "C) Solicitar orçamento adicional sem justificativa", 
+                                "D) Reduzir a qualidade para manter prazos e custos"
+                            ], 
+                            a: "B",
+                            consequences: {
+                                correct: { money: 5, respect: 15, pressure: -5 },
+                                incorrect: { money: -20, respect: -15, pressure: 15 }
+                            }
+                        },
+                        { 
+                            q: "Qual método é mais eficaz para evitar atrasos em projetos?", 
+                            options: [
+                                "A) Micromanagement da equipe", 
+                                "B) Buffer de tempo e planejamento contingencial", 
+                                "C) Prazos irreais para pressionar a equipe", 
+                                "D) Contratação de mais recursos do que necessário"
+                            ], 
+                            a: "B",
+                            consequences: {
+                                correct: { money: 10, respect: 15, pressure: -8 },
+                                incorrect: { money: -15, respect: -10, pressure: 12 }
+                            }
+                        }
+                    ]
+                },
+                {
+                    title: "TOMADA DE DECISÃO ESTRATÉGICA",
+                    description: "A empresa enfrenta uma encruzilhada estratégica que definirá seu futuro.",
+                    questions: [
+                        { 
+                            q: "Como tomar decisões estratégicas complexas?", 
+                            options: [
+                                "A) Confiar apenas na intuição do líder", 
+                                "B) Buscar consenso total entre todos os stakeholders", 
+                                "C) Analisar dados, cenários e envolver pessoas-chave no processo", 
+                                "D) Adiar a decisão até que se torne óbvia"
+                            ], 
+                            a: "C", 
+                            riddle: "Decisões importantes raramente são binárias. A sabedoria está em navegar nos tons de cinza, não preto e branco.",
+                            consequences: {
+                                correct: { money: 15, respect: 15, pressure: -5 },
+                                incorrect: { money: -30, respect: -20, pressure: 20 }
+                            }
+                        },
+                        { 
+                            q: "Como lidar com a incerteza inerente a decisões estratégicas?", 
+                            options: [
+                                "A) Esperar até ter certeza absoluta", 
+                                "B) Tomar decisões incrementais e ajustar conforme feedback", 
+                                "C) Seguir o que os concorrentes estão fazendo", 
+                                "D) Terceirizar a decisão para consultores externos"
+                            ], 
+                            a: "B",
+                            consequences: {
+                                correct: { money: 10, respect: 15, pressure: -5 },
+                                incorrect: { money: -20, respect: -15, pressure: 15 }
+                            }
+                        },
+                        { 
+                            q: "Qual o erro mais comum em decisões estratégicas?", 
+                            options: [
+                                "A) Superconfiança nos próprios julgamentos", 
+                                "B) Excessiva análise paralítica", 
+                                "C) Subestimação de riscos", 
+                                "D) Todas as anteriores"
+                            ], 
+                            a: "D",
+                            consequences: {
+                                correct: { money: 15, respect: 20, pressure: -10 },
+                                incorrect: { money: -25, respect: -15, pressure: 18 }
+                            }
+                        }
+                    ]
+                },
+                {
+                    title: "ENGAJAMENTO COM STAKEHOLDERS",
+                    description: "Diferentes partes interessadas têm expectativas conflitantes em relação à empresa.",
+                    questions: [
+                        { 
+                            q: "Como priorizar stakeholders com interesses conflitantes?", 
+                            options: [
+                                "A) Focar apenas nos acionistas", 
+                                "B) Atender primeiro quem faz mais barulho", 
+                                "C) Identificar e priorizar com base no impacto e influência", 
+                                "D) Ignorar conflitos e tomar decisões unilateralmente"
+                            ], 
+                            a: "C", 
+                            riddle: "Não se trata de agradar a todos, mas de entender quem importa e por quê. Mapas de stakeholders revelam terrenos ocultos.",
+                            consequences: {
+                                correct: { money: 10, respect: 15, pressure: -5 },
+                                incorrect: { money: -20, respect: -20, pressure: 15 }
+                            }
+                        },
+                        { 
+                            q: "Como gerenciar expectativas de stakeholders?", 
+                            options: [
+                                "A) Prometer tudo o que solicitam", 
+                                "B) Comunicar-se de forma transparente e realista", 
+                                "C) Evitar contato para não criar expectativas", 
+                                "D) Terceirizar o relacionamento com stakeholders"
+                            ], 
+                            a: "B",
+                            consequences: {
+                                correct: { money: 5, respect: 20, pressure: -5 },
+                                incorrect: { money: -25, respect: -25, pressure: 20 }
+                            }
+                        },
+                        { 
+                            q: "Qual a importância do engajamento contínuo com stakeholders?", 
+                            options: [
+                                "A) Aumenta a legitimidade social da empresa", 
+                                "B) Antecipa problemas e oportunidades", 
+                                "C) Constrói resiliência em tempos de crise", 
+                                "D) Todas as anteriores"
+                            ], 
+                            a: "D",
+                            consequences: {
+                                correct: { money: 15, respect: 20, pressure: -10 },
+                                incorrect: { money: -15, respect: -15, pressure: 15 }
+                            }
+                        }
+                    ]
+                }
+            ];
+
+            function shuffleArray(array) {
+                for (let i = array.length - 1; i > 0; i--) {
+                    const j = Math.floor(Math.random() * (i + 1));
+                    [array[i], array[j]] = [array[j], array[i]];
+                }
+            }
+
+            // Embaralha as perguntas dentro de cada cenário
+            function shuffleQuestions() {
+                allScenarios.forEach(scenario => {
+                    shuffleArray(scenario.questions);
+                });
+            }
+
+            // Exibe a próxima tela e esconde a anterior
+            function showScreen(screenId) {
+                document.querySelectorAll('.screen').forEach(screen => {
+                    screen.classList.remove('active');
+                });
+                document.getElementById(screenId).classList.add('active');
+
+                // Transição para o modo colorido na tela de jogo
+                if (screenId === 'game-screen') {
+                    document.body.classList.add('colorful-mode');
+                } else {
+                    document.body.classList.remove('colorful-mode');
+                    document.body.classList.remove('stress-mode');
+                }
+            }
+            
+            // Exibe um modal de mensagem
+            function showModal(text, consequence, isError, callback) {
+                modalText.textContent = text;
+                consequenceText.textContent = consequence || '';
+                
+                messageModal.style.display = 'block';
+                modalBtn.onclick = () => {
+                    messageModal.style.display = 'none';
+                    if (callback) callback();
+                };
+            }
+
+            // Formata o tempo em minutos:segundos
+            function formatTime(seconds) {
+                const mins = Math.floor(seconds / 60);
+                const secs = seconds % 60;
+                return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+            }
+
+            // Inicia o jogo
+            function startGame() {
+                // Embaralha as perguntas
+                shuffleQuestions();
+                
+                // Prepara os cenários para o jogo
+                shuffleArray(allScenarios);
+                questionPool = allScenarios.slice(0, TOTAL_PHASES);
+
+                // Configura o estado inicial do jogo
+                gameState = {
+                    currentPhase: 0,
+                    currentQuestion: 0,
+                    money: 0,
+                    respect: 0,
+                    pressure: 0,
+                    stamina: TOTAL_TIME
+                };
+                
+                updateBars();
+                showScreen('game-screen');
+                startTimer();
+                loadQuestion();
+                
+                // Mostrar conquista de início de jogo
+                showAchievement('Jogo Iniciado!', 'fa-play');
+            }
+
+            // Inicia o cronômetro
+            function startTimer() {
+                gameTimer = setInterval(() => {
+                    if (gameState.stamina > 0) {
+                        gameState.stamina--;
+                        tempoValue.textContent = formatTime(gameState.stamina);
+                        
+                        // Aumenta a pressão conforme o tempo passa
+                        if (gameState.stamina % 30 === 0 && gameState.stamina < 300) {
+                            gameState.pressure += 5;
+                            showModal("A pressão aumenta com o tempo correndo!", "+5 de Pressão", false);
+                        }
+                        
+                        // Alerta visual quando o tempo está acabando
+                        if (gameState.stamina === 60) {
+                            tempoValue.classList.add('time-warning');
+                            showModal("Último minuto! A pressão está máxima!", "Tome decisões rápidas e precisas!", false);
+                        }
+                        
+                        updateBars();
+                        
+                        if (gameState.stamina === 0) {
+                            endGame(false);
+                        }
+                    }
+                }, 1000);
+            }
+            
+            // Pausa o cronômetro
+            function stopTimer() {
+                clearInterval(gameTimer);
+                tempoValue.classList.remove('time-warning');
+            }
+
+            // Carrega a próxima pergunta na tela
+            function loadQuestion() {
+                if (gameState.currentPhase >= questionPool.length) {
+                    endGame(true);
+                    return;
+                }
+                
+                const scenario = questionPool[gameState.currentPhase];
+                const question = scenario.questions[gameState.currentQuestion];
+                
+                scenarioHeader.textContent = `${scenario.title}: ${scenario.description}`;
+                phaseLabel.textContent = `Cenário ${gameState.currentPhase + 1} - Questão ${gameState.currentQuestion + 1}/3`;
+                
+                if (question.riddle) {
+                    riddleText.textContent = question.riddle;
+                } else {
+                    riddleText.textContent = "Analise cuidadosamente todas as opções antes de decidir.";
+                }
+                
+                questionText.textContent = question.q;
+                optionsContainer.innerHTML = '';
+                
+                question.options.forEach((option, index) => {
+                    const btn = document.createElement('button');
+                    btn.classList.add('option-btn');
+                    btn.textContent = option;
+                    btn.onclick = () => checkAnswer(String.fromCharCode(65 + index), question.consequences);
+                    optionsContainer.appendChild(btn);
+                });
+            }
+
+            // Verifica a resposta do jogador
+            function checkAnswer(selectedOption, consequences) {
+                const scenario = questionPool[gameState.currentPhase];
+                const question = scenario.questions[gameState.currentQuestion];
+                
+                // Desabilita os botões para evitar cliques duplos
+                document.querySelectorAll('.option-btn').forEach(btn => btn.disabled = true);
+
+                // Destaca visualmente a resposta correta e incorreta
+                document.querySelectorAll('.option-btn').forEach(btn => {
+                    if (btn.textContent.startsWith(question.a + ")")) {
+                        btn.classList.add('correct');
+                    } else if (btn.textContent.startsWith(selectedOption + ")")) {
+                        btn.classList.add('incorrect');
+                    }
+                });
+
+                if (selectedOption === question.a) {
+                    // Resposta correta
+                    gameState.money += consequences.correct.money;
+                    gameState.respect += consequences.correct.respect;
+                    gameState.pressure += consequences.correct.pressure;
+                    
+                    // Feedback positivo
+                    gameContainer.classList.add('pulse');
+                    setTimeout(() => gameContainer.classList.remove('pulse'), 500);
+                    
+                    // Efeito sonoro
+                    try {
+                        soundEffects.correct.play();
+                    } catch (e) {
+                        console.log("Efeito sonoro não pode ser reproduzido");
+                    }
+                    
+                    showModal("Decisão acertada!", `+${consequences.correct.money} Dinheiro, +${consequences.correct.respect} Respeito, ${consequences.correct.pressure > 0 ? '+' : ''}${consequences.correct.pressure} Pressão`, false, () => {
+                        nextQuestion();
+                    });
+                } else {
+                    // Resposta incorreta
+                    gameState.money += consequences.incorrect.money;
+                    gameState.respect += consequences.incorrect.respect;
+                    gameState.pressure += consequences.incorrect.pressure;
+                    
+                    // Feedback negativo
+                    gameContainer.classList.add('shake');
+                    setTimeout(() => gameContainer.classList.remove('shake'), 500);
+                    
+                    // Efeito sonoro
+                    try {
+                        soundEffects.incorrect.play();
+                    } catch (e) {
+                        console.log("Efeito sonoro não pode ser reproduzido");
+                    }
+                    
+                    if (gameState.currentQuestion === 0 && gameState.currentPhase === 0) {
+                        // Primeira pergunta errada - não inicia o jogo
+                        showModal("Resposta incorreta! Administrar exige conhecimento sólido.", "Obrigado por tentar, mas você precisa se preparar melhor antes de assumir responsabilidades administrativas.", true, () => {
+                            showScreen('explanation-screen');
+                            startGameBtn.textContent = 'TENTAR NOVAMENTE';
+                        });
+                        return;
+                    }
+                    
+                    showModal("Decisão equivocada!", `${consequences.incorrect.money} Dinheiro, ${consequences.incorrect.respect} Respeito, ${consequences.incorrect.pressure > 0 ? '+' : ''}${consequences.incorrect.pressure} Pressão\n\nObrigado pelo esforço, mas precisamos de administradores que tomem decisões mais assertivas.`, true, () => {
+                        nextQuestion();
+                    });
+                }
+                
+                // Atualiza a interface
+                updateBars();
+                
+                // Ativa modo de estresse se a pressão estiver alta
+                if (gameState.pressure >= 70) {
+                    document.body.classList.add('stress-mode');
+                } else {
+                    document.body.classList.remove('stress-mode');
+                }
+            }
+
+            // Avança para a próxima pergunta ou fase
+            function nextQuestion() {
+                gameState.currentQuestion++;
+                if (gameState.currentQuestion >= 3) {
+                    gameState.currentQuestion = 0;
+                    gameState.currentPhase++;
+                    
+                    // Recompensa por completar um cenário
+                    if (gameState.currentPhase < questionPool.length) {
+                        gameState.money += 25;
+                        gameState.respect += 20;
+                        gameState.pressure = Math.max(0, gameState.pressure - 10);
+                        showModal(`Cenário ${gameState.currentPhase} completado!`, "+25 Dinheiro, +20 Respeito, -10 Pressão", false);
+                        
+                        // Mostrar conquista
+                        showAchievement(`Cenário ${gameState.currentPhase} Completo!`, 'fa-trophy');
+                    }
+                }
+                
+                updateBars();
+                loadQuestion();
+            }
+
+            // Atualiza as barras de progresso na UI
+            function updateBars() {
+                // Limita os valores entre 0-100
+                gameState.money = Math.max(0, Math.min(300, gameState.money));
+                gameState.respect = Math.max(0, Math.min(100, gameState.respect));
+                gameState.pressure = Math.max(0, Math.min(100, gameState.pressure));
+                
+                const tempoPercent = (gameState.stamina / TOTAL_TIME) * 100;
+                tempoFill.style.width = `${tempoPercent}%`;
+                tempoValue.textContent = formatTime(gameState.stamina);
+                
+                // Muda a cor da barra de tempo conforme diminui
+                if (tempoPercent < 20) {
+                    tempoFill.style.background = 'linear-gradient(90deg, #ff5a5a, #ff3333)';
+                } else if (tempoPercent < 50) {
+                    tempoFill.style.background = 'linear-gradient(90deg, #ffa500, #ff8c00)';
+                } else {
+                    tempoFill.style.background = 'linear-gradient(90deg, var(--green-pixel), #00ff95)';
+                }
+                
+                const dinheiroPercent = Math.min(100, (gameState.money / 300) * 100);
+                dinheiroFill.style.width = `${dinheiroPercent}%`;
+                dinheiroValue.textContent = `R$ ${gameState.money}`;
+                
+                const respeitoPercent = Math.min(100, gameState.respect);
+                respeitoFill.style.width = `${respeitoPercent}%`;
+                respeitoValue.textContent = `${Math.round(respeitoPercent)}%`;
+                
+                const pressaoPercent = Math.min(100, gameState.pressure);
+                pressaoFill.style.width = `${pressaoPercent}%`;
+                pressaoValue.textContent = `${Math.round(pressaoPercent)}%`;
+                
+                // Verifica se a pressão atingiu o limite máximo
+                if (gameState.pressure >= 100) {
+                    endGame(false, "Sua pressão atingiu o limite máximo! Você foi demitido por não suportar o estresse da administração.");
+                }
+            }
+
+            // Finaliza o jogo
+            function endGame(success, message) {
+                stopTimer();
+                
+                if (success) {
+                    endMessage.textContent = "PARABÉNS! Você completou todos os cenários!";
+                    endDetails.innerHTML = `
+                        <p>Resultados finais:</p>
+                        <p>Dinheiro acumulado: R$ ${gameState.money}</p>
+                        <p>Respeito da equipe: ${gameState.respect}%</p>
+                        <p>Nível de pressão: ${gameState.pressure}%</p>
+                        <p>Tempo restante: ${formatTime(gameState.stamina)}</p>
+                    `;
+                    // Efeito sonoro de vitória
+                    try {
+                        soundEffects.win.play();
+                    } catch (e) {
+                        console.log("Efeito sonoro não pode ser reproduzido");
+                    }
+                    // Conquista de vitória
+                    showAchievement('Jogo Concluído!', 'fa-medal');
+                } else {
+                    endMessage.textContent = message || "O tempo acabou. Você não completou o desafio.";
+                    endDetails.innerHTML = `
+                        <p>Resultados alcançados:</p>
+                        <p>Dinheiro acumulado: R$ ${gameState.money}</p>
+                        <p>Respeito da equipe: ${gameState.respect}%</p>
+                        <p>Nível de pressão: ${gameState.pressure}%</p>
+                        <p>Cenários completos: ${gameState.currentPhase} de ${TOTAL_PHASES}</p>
+                    `;
+                    // Efeito sonoro de derrota
+                    try {
+                        soundEffects.lose.play();
+                    } catch (e) {
+                        console.log("Efeito sonoro não pode ser reproduzido");
+                    }
+                }
+                
+                showScreen('end-screen');
+            }
+
+            // Função para sair do jogo
+            window.sairDoJogo = function() {
+                if (confirm("Tem certeza que deseja sair do jogo?")) {
+                    window.close();
+                }
+            }
+
+            // Eventos de clique
+            prosseguirBtn.addEventListener('click', () => {
+                try {
+                    soundEffects.click.play();
+                } catch (e) {
+                    console.log("Efeito sonoro não pode ser reproduzido");
+                }
+                showScreen('explanation-screen');
+            });
+            
+            startGameBtn.addEventListener('click', () => {
+                try {
+                    soundEffects.click.play();
+                } catch (e) {
+                    console.log("Efeito sonoro não pode ser reproduzido");
+                }
+                startGame();
+            });
+            
+            restartBtn.addEventListener('click', () => {
+                try {
+                    soundEffects.click.play();
+                } catch (e) {
+                    console.log("Efeito sonoro não pode ser reproduzido");
+                }
+                showScreen('intro-screen');
+                prosseguirBtn.disabled = true;
+                prosseguirBtn.classList.remove('visible');
+                startGameBtn.textContent = 'ACEITAR O DESAFIO';
+                setTimeout(() => {
+                    prosseguirBtn.disabled = false;
+                    prosseguirBtn.classList.add('visible');
+                }, 5000);
+            });
+
+            // Início do jogo, aguarda 5 segundos para o botão prosseguir
+            setTimeout(() => {
+                prosseguirBtn.disabled = false;
+                prosseguirBtn.classList.add('visible');
+            }, 5000);
+
+            // Criar partículas
+            createParticles();
+        });
+    </script>
+</body>
+</html>
